@@ -30,17 +30,19 @@ public class Live2DExpressionController : MonoBehaviour
 	private struct ExpressionMapping
 	{
 		public Exp3s Expression;
-		public CubismExpressionData Asset;
+		// NOTE: 1つの表情に対して複数のCubismExpressionDataを紐づけられるようにし、
+		// 表情変更時にこの中からランダムで1つを選択する。
+		public CubismExpressionData[] Assets;
 	}
 
-	// NOTE: 2026/08/15 ExpressionsList内の.exp3アセット名はモデル制作時の任意の名前（例: "smile.exp3"）であり、
+	// NOTE: 2026/08/15 ExpressionsList内の.exp3アセット名はモデル制作時の任意の名前（例: "test-smile.exp3"）であり、
 	// Exp3sのメンバー名と一致する保証がない。そのため名前や並び順ではなく、Inspectorで明示的に
 	// 紐付けたアセット参照で検索する（並び替えやリネームをしても壊れない）。
 	[SerializeField] private ExpressionMapping[] expressionMappings;
 
 	private void Awake()
 	{
-		// NOTE: チュートリアル動画用にInspectorでのアタッチではなく、同一GameObjectへのアタッチをGetComponentで自動取得する。
+		// NOTE: 講習会用にInspectorでのアタッチではなく、同一GameObjectへのアタッチをGetComponentで自動取得する。
 		// 取得できない場合（コンポーネント未アタッチ）は失敗を許容し、以降のnullチェックで検知する。
 		cubismExpressionController = GetComponent<CubismExpressionController>();
 		cubismEyeBlinkController = GetComponent<CubismEyeBlinkController>();
@@ -70,12 +72,12 @@ public class Live2DExpressionController : MonoBehaviour
 		}
 	}
 
-	public void OnPlayExpressionButtonClick()
+	public void OnButtonClick()
 	{
 		ChangeExpressionWithExp3(Exp3s.smile);
 	}
 
-	public void OnResetExpressionButtonClick()
+	public void OnButtonClick2()
 	{
 		ChangeExpressionWithExp3(Exp3s.normal);
 	}
@@ -139,17 +141,27 @@ public class Live2DExpressionController : MonoBehaviour
 		return -1;
 	}
 
+	// NOTE: 対象の表情に複数のCubismExpressionDataが紐づいている場合、その中からランダムで1つを返す。
 	private bool TryGetMappedAsset(Exp3s exp, out CubismExpressionData asset)
 	{
 		if (expressionMappings != null)
 		{
 			foreach (var mapping in expressionMappings)
 			{
-				if (mapping.Expression == exp && mapping.Asset != null)
+				if (mapping.Expression != exp || mapping.Assets == null)
 				{
-					asset = mapping.Asset;
-					return true;
+					continue;
 				}
+
+				// nullが混在していても選択できるよう、有効なアセットのみを候補にする。
+				var candidates = Array.FindAll(mapping.Assets, a => a != null);
+				if (candidates.Length == 0)
+				{
+					continue;
+				}
+
+				asset = candidates[UnityEngine.Random.Range(0, candidates.Length)];
+				return true;
 			}
 		}
 
@@ -157,7 +169,7 @@ public class Live2DExpressionController : MonoBehaviour
 		return false;
 	}
 
-	// NOTE: CubismEyeBlinkControllerはCubismExpressionControllerより後に
+	// NOTE: CubismEyeBlinkController(実行順序400)はCubismExpressionController(実行順序300)より後に
 	// 毎フレーム実行され、BlendMode=OverrideでEyeOpeningの値をそのまま上書きする。そのためenabled=trueの
 	// まま残すと、表情(exp3)側が設定した閉じ目の値を毎フレーム強制的に上書きしてしまい、目を閉じる
 	// 表情が機能しなくなる。無効化時はコントローラー自体を止め、表情側の値をそのまま反映させる。
