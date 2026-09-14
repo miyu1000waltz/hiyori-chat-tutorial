@@ -10,8 +10,8 @@ public class LLMController : MonoBehaviour
     const string URL = "https://generativelanguage.googleapis.com/v1beta/models/"
                      + "gemini-3.5-flash-lite:generateContent";
 
-    [SerializeField] private SpeechController speechController;
-    [SerializeField] private Live2DExpressionController expressionController;
+    private SpeechController speechController;
+    private Live2DExpressionController expressionController;
 
     // LLM応答テキストが届いたときに発火する。PresenterSubtitlePanelが購読して字幕表示に使う。
     public event System.Action<string> OnResponseText;
@@ -62,6 +62,24 @@ public class LLMController : MonoBehaviour
     // ASRなど外部からLLM稼働中かどうかを判定するための公開プロパティ。
     public bool IsBusy => isSpeaking;
 
+    private void Awake()
+    {
+        // NOTE: Inspectorでのアタッチではなく、同一GameObjectへのアタッチをGetComponentで自動取得する。
+        // 取得できない場合（コンポーネント未アタッチ）は失敗を許容し、以降のnullチェックで検知する。
+        speechController = GetComponent<SpeechController>();
+        expressionController = GetComponent<Live2DExpressionController>();
+
+        if (speechController == null)
+        {
+            Debug.LogError($"{name}: {nameof(SpeechController)}が同一GameObjectにアタッチされていません。", this);
+        }
+
+        if (expressionController == null)
+        {
+            Debug.LogError($"{name}: {nameof(Live2DExpressionController)}が同一GameObjectにアタッチされていません。", this);
+        }
+    }
+
     public void OnSendButtonClicked()
     {
         if (isSpeaking) return;
@@ -91,7 +109,7 @@ public class LLMController : MonoBehaviour
         {
             OnResponseText?.Invoke(result.Text);
 
-            if (result.Success)
+            if (result.Success && speechController != null)
             {
                 speechController.TextToSpeech(result.Text, EndSpeaking);
             }
