@@ -8,7 +8,7 @@ public class LLMController : MonoBehaviour
 {
     [SerializeField] private string apiKey;
     const string URL = "https://generativelanguage.googleapis.com/v1beta/models/"
-                     + "gemini-2.5-flash-lite:generateContent";
+                     + "gemini-3.5-flash-lite:generateContent";
 
     [SerializeField] private SpeechController speechController;
     [SerializeField] private Live2DExpressionController expressionController;
@@ -147,7 +147,7 @@ public class LLMController : MonoBehaviour
 
         if (req.result != UnityWebRequest.Result.Success)
         {
-            Debug.LogError("通信エラー: " + req.error);
+            Debug.LogError("通信エラー: " + req.error + "\n" + req.downloadHandler.text);
             onResult(new LLMResult(false, "（通信エラーが発生しました: " + req.error + "）"));
             yield break;
         }
