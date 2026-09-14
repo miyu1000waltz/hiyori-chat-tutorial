@@ -10,7 +10,7 @@ public class PresenterSubtitlePanel : MonoBehaviour
     [SerializeField] private LLMController    llmController;
     [FormerlySerializedAs("asrController")]
     [SerializeField] private AsrApiController    asrApiController;
-    [SerializeField] private ViewSubtitlePanel view;
+    private ViewSubtitlePanel view;
 
     void Awake()
     {
@@ -24,9 +24,10 @@ public class PresenterSubtitlePanel : MonoBehaviour
             Debug.LogError($"{name}: Inspectorで{nameof(asrApiController)}(AsrApiController)を設定してください。", this);
         }
 
+        view = GetComponent<ViewSubtitlePanel>();
         if (view == null)
         {
-            Debug.LogError($"{name}: Inspectorで{nameof(view)}(ViewSubtitlePanel)を設定してください。", this);
+            Debug.LogError($"{name}: 同一GameObjectに{nameof(ViewSubtitlePanel)}をアタッチしてください。", this);
         }
     }
 
