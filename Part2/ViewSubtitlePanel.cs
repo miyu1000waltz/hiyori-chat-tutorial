@@ -30,7 +30,6 @@ public class ViewSubtitlePanel : MonoBehaviour
         _text.fontSize       = fontSize;
         _text.color          = textColor;
         _text.alignment      = TextAlignmentOptions.Center;
-        _text.overflowMode   = TextOverflowModes.Truncate;
         _text.raycastTarget  = false;  // 下にあるInputFieldなどへのクリックをブロックしないようにする
 
         if (fontAsset != null)
