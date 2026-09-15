@@ -218,6 +218,8 @@ public class LLMController : MonoBehaviour
             expressionController.ChangeExpressionon(output.expression);
         }
 
+        Debug.Log($"LLM出力結果: {text}");
+
         onResult(new LLMResult(true, text));
     }
 }
